@@ -1,0 +1,152 @@
+----------WARMUP----------
+
+Running on cpu...
+Inference time on cpu: 1.9831 seconds
+-----------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                 Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  Total KFLOPs  
+-----------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                             aten::mm        69.79%        1.384s        69.79%        1.384s     446.509us      61.09 Mb      51.94 Mb          3100  78194409.472  
+                                       model_generate        16.62%     329.656ms       100.00%        1.983s        1.983s         320 b    -468.52 Mb             1            --  
+                                         aten::linear         4.47%      88.589ms        71.32%        1.414s     456.257us      61.09 Mb       2.74 Mb          3100            --  
+                                          aten::copy_         1.16%      23.059ms         1.16%      23.059ms       7.381us      27.91 Mb      27.91 Mb          3124            --  
+                                         aten::matmul         0.78%      15.434ms        70.71%        1.402s     449.487us      61.10 Mb           0 b          3120            --  
+    aten::_scaled_dot_product_flash_attention_for_cpu         0.62%      12.321ms         0.65%      12.939ms      29.407us       6.78 Mb      -1.97 Mb           440            --  
+                                            aten::mul         0.46%       9.198ms         0.47%       9.312ms       2.282us      57.46 Mb      57.46 Mb          4080     14228.392  
+                                            aten::cat         0.43%       8.594ms         0.60%      11.877ms       6.688us      31.16 Mb      30.51 Mb          1776            --  
+                                          aten::empty         0.41%       8.068ms         0.41%       8.068ms       2.683us     170.04 Mb     170.04 Mb          3007            --  
+                                          aten::slice         0.40%       7.947ms         0.40%       7.956ms       1.059us           0 b           0 b          7510            --  
+                                           aten::isin         0.34%       6.644ms         0.35%       6.879ms     112.770us       1.22 Mb       1.19 Mb            61            --  
+                                           aten::sort         0.30%       5.860ms         0.33%       6.471ms     294.136us       8.06 Mb     750.00 Kb            22            --  
+                                            aten::add         0.29%       5.665ms         0.41%       8.049ms       2.981us      18.63 Mb      18.63 Mb          2700      5492.995  
+                                      aten::transpose         0.27%       5.421ms         0.27%       5.445ms       0.769us    -833.69 Kb    -834.06 Kb          7080            --  
+                                       aten::_to_copy         0.26%       5.216ms         0.31%       6.246ms       3.123us       9.04 Kb       2.87 Kb          2000            --  
+                                            aten::pow         0.25%       4.874ms         0.25%       4.882ms       5.424us      13.71 Mb      12.93 Mb           900            --  
+                                           aten::mean         0.23%       4.599ms         0.87%      17.262ms      19.180us      -1.71 Mb      -1.63 Mb           900            --  
+                                           aten::div_         0.23%       4.548ms         0.50%       9.923ms      10.044us    -252.64 Kb    -256.39 Kb           988            --  
+                                          aten::clone         0.21%       4.126ms         1.73%      34.258ms      32.877us     218.46 Mb     -22.68 Mb          1042            --  
+                                              aten::t         0.21%       4.106ms         0.33%       6.537ms       2.109us           0 b           0 b          3100            --  
+-----------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 1.983s
+
+
+Running on cuda...
+Inference time on cuda: 0.4887 seconds
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg       CPU Mem  Self CPU Mem      CUDA Mem  Self CUDA Mem    # of Calls  Total KFLOPs  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                         model_generate         0.00%       0.000us         0.00%       0.000us       0.000us     487.873ms        71.20%     487.873ms     487.873ms           0 b           0 b           0 b           0 b             1            --  
+                                               aten::mm         3.83%      18.732ms         5.57%      27.203ms       8.775us     181.266ms        26.45%     183.237ms      59.109us           0 b           0 b      61.09 Mb      61.09 Mb          3100  78194409.472  
+void gemv2T_kernel_val<int, int, float, float, float...         0.00%       0.000us         0.00%       0.000us       0.000us     166.427ms        24.29%     166.427ms      78.875us           0 b           0 b           0 b           0 b          2110            --  
+                                       cudaLaunchKernel        46.12%     225.388ms        46.12%     225.388ms      11.979us      15.271ms         2.23%      15.272ms       0.812us        -296 b        -296 b       1.45 Mb       1.45 Mb         18815            --  
+                        ampere_sgemm_32x32_sliced1x4_tn         0.00%       0.000us         0.00%       0.000us       0.000us       5.579ms         0.81%       5.579ms      63.398us           0 b           0 b           0 b           0 b            88            --  
+std::enable_if<!(false), void>::type internal::gemvx...         0.00%       0.000us         0.00%       0.000us       0.000us       4.767ms         0.70%       4.767ms       5.702us           0 b           0 b           0 b           0 b           836            --  
+                                 ampere_sgemm_128x32_tn         0.00%       0.000us         0.00%       0.000us       0.000us       4.325ms         0.63%       4.325ms      65.530us           0 b           0 b           0 b           0 b            66            --  
+                     aten::_efficient_attention_forward         0.76%       3.718ms         1.26%       6.149ms      13.975us       4.114ms         0.60%       4.706ms      10.695us       6.88 Kb         880 b       6.70 Mb           0 b           440            --  
+fmha_cutlassF_f32_aligned_64x64_rf_sm80(PyTorchMemEf...         0.00%       0.000us         0.00%       0.000us       0.000us       4.114ms         0.60%       4.114ms       9.350us           0 b           0 b           0 b           0 b           440            --  
+                                              aten::mul         3.55%      17.357ms         4.82%      23.536ms       5.769us       3.396ms         0.50%       6.702ms       1.643us         -64 b         -64 b      59.46 Mb      59.46 Mb          4080     14228.392  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us       2.705ms         0.39%       2.705ms       1.000us           0 b           0 b           0 b           0 b          2705            --  
+                                              aten::cat         1.98%       9.663ms         2.68%      13.076ms       7.363us       2.287ms         0.33%       3.521ms       1.983us           0 b           0 b      31.85 Mb      31.85 Mb          1776            --  
+                                             aten::mean         1.05%       5.108ms         1.57%       7.680ms       8.533us       1.436ms         0.21%       2.145ms       2.383us           0 b           0 b    -166.00 Kb    -166.00 Kb           900            --  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us       1.436ms         0.21%       1.436ms       1.596us           0 b           0 b           0 b           0 b           900            --  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us       1.430ms         0.21%       1.430ms       1.548us           0 b           0 b           0 b           0 b           924            --  
+                                            aten::copy_         0.70%       3.441ms         1.79%       8.725ms       7.217us     963.000us         0.14%       2.111ms       1.746us          -8 b          -8 b    -315.00 Kb    -315.00 Kb          1209            --  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     902.000us         0.13%     902.000us       1.000us           0 b           0 b           0 b           0 b           902            --  
+                                              aten::neg         0.76%       3.724ms         1.69%       8.276ms       9.405us     880.000us         0.13%       1.973ms       2.242us           0 b           0 b       3.77 Mb       3.77 Mb           880            --  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     880.000us         0.13%     880.000us       1.000us           0 b           0 b           0 b           0 b           880            --  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us     792.000us         0.12%     792.000us       1.000us           0 b           0 b           0 b           0 b           792            --  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 488.711ms
+Self CUDA time total: 685.255ms
+
+----------AFTER WARMUP----------
+
+Running on cpu...
+Inference time on cpu: 1.6978 seconds
+-----------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                 Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  Total KFLOPs  
+-----------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                             aten::mm        80.47%        1.366s        80.47%        1.366s     440.744us      61.09 Mb      54.78 Mb          3100  78194409.472  
+                                         aten::linear         5.17%      87.803ms        82.32%        1.398s     450.884us      61.09 Mb       2.85 Mb          3100            --  
+                                       model_generate         4.43%      75.257ms       100.00%        1.698s        1.698s         320 b    -469.62 Mb             1            --  
+                                          aten::copy_         1.17%      19.867ms         1.17%      19.867ms       6.359us      19.30 Mb      19.30 Mb          3124            --  
+                                         aten::matmul         0.92%      15.562ms        81.56%        1.385s     443.850us      61.10 Mb           0 b          3120            --  
+    aten::_scaled_dot_product_flash_attention_for_cpu         0.59%      10.011ms         0.64%      10.945ms      24.875us       6.78 Mb      -2.71 Mb           440            --  
+                                            aten::cat         0.51%       8.690ms         0.71%      12.125ms       6.827us      30.82 Mb      30.00 Mb          1776            --  
+                                          aten::slice         0.47%       7.918ms         0.47%       8.054ms       1.072us           0 b           0 b          7510            --  
+                                            aten::mul         0.46%       7.875ms         0.47%       7.989ms       1.958us      57.90 Mb      57.90 Mb          4080     14228.392  
+                                           aten::isin         0.39%       6.606ms         0.40%       6.839ms     112.115us       1.22 Mb       1.19 Mb            61            --  
+                                           aten::sort         0.34%       5.752ms         0.38%       6.391ms     290.500us       8.06 Mb       2.44 Mb            22            --  
+                                      aten::transpose         0.34%       5.716ms         0.35%       5.966ms       0.843us    -586.62 Kb    -586.75 Kb          7080            --  
+                                       aten::_to_copy         0.32%       5.440ms         0.39%       6.601ms       3.300us       8.54 Kb       2.30 Kb          2000            --  
+                                            aten::add         0.32%       5.400ms         0.46%       7.801ms       2.889us      19.06 Mb      19.06 Mb          2700      5492.995  
+                                           aten::mean         0.28%       4.829ms         1.06%      17.982ms      19.980us      -1.29 Mb      -1.18 Mb           900            --  
+                                          aten::empty         0.28%       4.767ms         0.28%       4.767ms       1.586us     175.75 Mb     175.75 Mb          3006            --  
+                                            aten::pow         0.28%       4.708ms         0.28%       4.714ms       5.238us      13.71 Mb      13.09 Mb           900            --  
+                                           aten::div_         0.26%       4.424ms         0.62%      10.501ms      10.629us    -292.71 Kb    -296.57 Kb           988            --  
+                                        aten::reshape         0.26%       4.356ms         1.88%      31.913ms       7.093us     202.81 Mb           0 b          4499            --  
+                                              aten::t         0.26%       4.340ms         0.44%       7.398ms       2.386us           0 b           0 b          3100            --  
+-----------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 1.698s
+
+
+Running on cuda...
+Inference time on cuda: 0.2805 seconds
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg       CPU Mem  Self CPU Mem      CUDA Mem  Self CUDA Mem    # of Calls  Total KFLOPs  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                         model_generate         0.00%       0.000us         0.00%       0.000us       0.000us     279.610ms        58.44%     279.610ms     279.610ms           0 b           0 b           0 b           0 b             1            --  
+                                               aten::mm         6.79%      19.038ms         8.32%      23.354ms       7.534us     183.005ms        38.25%     185.789ms      59.932us           0 b           0 b      61.09 Mb      61.09 Mb          3100  78194409.472  
+void gemv2T_kernel_val<int, int, float, float, float...         0.00%       0.000us         0.00%       0.000us       0.000us     167.114ms        34.93%     167.114ms      79.201us           0 b           0 b           0 b           0 b          2110            --  
+                                       cudaLaunchKernel         8.68%      24.353ms         8.68%      24.353ms       1.294us      16.004ms         3.34%      16.137ms       0.858us        -288 b        -288 b       1.68 Mb       1.68 Mb         18815            --  
+                        ampere_sgemm_32x32_sliced1x4_tn         0.00%       0.000us         0.00%       0.000us       0.000us       5.698ms         1.19%       5.698ms      64.750us           0 b           0 b           0 b           0 b            88            --  
+                                 ampere_sgemm_128x32_tn         0.00%       0.000us         0.00%       0.000us       0.000us       5.187ms         1.08%       5.187ms      78.591us           0 b           0 b           0 b           0 b            66            --  
+std::enable_if<!(false), void>::type internal::gemvx...         0.00%       0.000us         0.00%       0.000us       0.000us       4.845ms         1.01%       4.845ms       5.795us           0 b           0 b           0 b           0 b           836            --  
+                     aten::_efficient_attention_forward         1.36%       3.809ms         2.17%       6.088ms      13.836us       4.114ms         0.86%       4.960ms      11.273us       6.88 Kb       1.46 Kb       6.70 Mb           0 b           440            --  
+fmha_cutlassF_f32_aligned_64x64_rf_sm80(PyTorchMemEf...         0.00%       0.000us         0.00%       0.000us       0.000us       4.114ms         0.86%       4.114ms       9.350us           0 b           0 b           0 b           0 b           440            --  
+                                              aten::mul         6.16%      17.271ms         7.75%      21.734ms       5.327us       3.166ms         0.66%       6.916ms       1.695us         -32 b         -32 b      60.46 Mb      60.46 Mb          4080     14228.392  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us       2.705ms         0.57%       2.705ms       1.000us           0 b           0 b           0 b           0 b          2705            --  
+                                              aten::cat         3.30%       9.267ms         4.18%      11.727ms       6.603us       2.287ms         0.48%       3.967ms       2.234us           0 b           0 b      31.75 Mb      31.75 Mb          1776            --  
+                                             aten::mean         1.85%       5.194ms         2.22%       6.222ms       6.913us       1.440ms         0.30%       2.225ms       2.472us           0 b           0 b    -238.00 Kb    -238.00 Kb           900            --  
+void at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us       1.440ms         0.30%       1.440ms       1.600us           0 b           0 b           0 b           0 b           900            --  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us       1.430ms         0.30%       1.430ms       1.548us           0 b           0 b           0 b           0 b           924            --  
+                                            aten::copy_         1.30%       3.643ms         2.13%       5.974ms       4.941us     962.000us         0.20%       1.896ms       1.568us           0 b           0 b    -316.00 Kb    -316.00 Kb          1209            --  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     902.000us         0.19%     902.000us       1.000us           0 b           0 b           0 b           0 b           902            --  
+                                              aten::neg         1.38%       3.864ms         1.73%       4.864ms       5.527us     880.000us         0.18%       1.597ms       1.815us           0 b           0 b       3.77 Mb       3.77 Mb           880            --  
+void at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us     880.000us         0.18%     880.000us       1.000us           0 b           0 b           0 b           0 b           880            --  
+void at::native::(anonymous namespace)::CatArrayBatc...         0.00%       0.000us         0.00%       0.000us       0.000us     792.000us         0.17%     792.000us       1.000us           0 b           0 b           0 b           0 b           792            --  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 280.536ms
+Self CUDA time total: 478.461ms
+
+
+Running on cpu with batch size 1...
+Inference time: 1.6101 seconds
+Throughput: 12.42 tokens/second
+
+Running on cpu with batch size 2...
+Inference time: 1.9976 seconds
+Throughput: 20.02 tokens/second
+
+Running on cpu with batch size 4...
+Inference time: 2.1610 seconds
+Throughput: 37.02 tokens/second
+
+Running on cpu with batch size 8...
+Inference time: 2.6657 seconds
+Throughput: 60.02 tokens/second
+
+Running on cuda with batch size 1...
+Inference time: 0.2303 seconds
+Throughput: 86.85 tokens/second
+
+Running on cuda with batch size 2...
+Inference time: 0.2685 seconds
+Throughput: 149.00 tokens/second
+
+Running on cuda with batch size 4...
+Inference time: 0.2817 seconds
+Throughput: 284.03 tokens/second
+
+Running on cuda with batch size 8...
+Inference time: 0.3065 seconds
+Throughput: 522.03 tokens/second
