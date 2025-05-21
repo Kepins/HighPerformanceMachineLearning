@@ -3,6 +3,7 @@ from transformers import LlamaForCausalLM, LlamaTokenizer
 from torch.profiler import profile, record_function, ProfilerActivity
 import time
 import numpy as np
+import resource
 
 
 def n_token_prompt(tokenizer, n, batch_size, device):
@@ -152,6 +153,117 @@ def profile_execution_time(model, tokenizer, device, batch_size, prompt_length=2
     print(f"{std=}")
 
 
+def profile_execution_time_and_max_memory(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True,
+                                          autocast_enabled=False):
+    if device == "cuda":
+        profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_size, prompt_length, use_cache,
+                                                   autocast_enabled)
+    elif device == "cpu":
+        profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_size, prompt_length, use_cache,
+                                                  autocast_enabled)
+    else:
+        raise ValueError(f"Unsupported device: {device}")
+
+
+def profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True,
+                                               autocast_enabled=False):
+    torch.cuda.reset_peak_memory_stats()
+    model.to(device)
+    model.eval()
+    inputs = n_token_prompt(tokenizer, n=prompt_length, batch_size=batch_size, device=device)
+
+    # Not timed
+    with torch.no_grad():
+        output = model.generate(
+            inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            use_cache=use_cache,
+            min_new_tokens=10,
+            max_new_tokens=10,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+        torch.cuda.synchronize()
+    inference_times = []
+    peak_memory_usages = []
+    for _ in range(3):
+        with torch.no_grad():
+            torch.cuda.reset_peak_memory_stats()
+            start = time.time()
+            with torch.autocast(device_type=device, enabled=autocast_enabled):
+                output = model.generate(
+                    inputs['input_ids'],
+                    use_cache=use_cache,
+                    attention_mask=inputs['attention_mask'],
+                    min_new_tokens=10,
+                    max_new_tokens=10,
+                    pad_token_id=tokenizer.pad_token_id,
+                    eos_token_id=tokenizer.eos_token_id,
+                )
+            torch.cuda.synchronize()
+            end = time.time()
+            peak_memory_usages.append(torch.cuda.max_memory_allocated() / (1024 ** 2))  # MB
+        inference_times.append(end - start)
+    mean_time = np.mean(inference_times)
+    std_time = np.std(inference_times)
+    mean_memory = np.mean(peak_memory_usages)
+    std_memory = np.std(peak_memory_usages)
+    max_memory = np.max(peak_memory_usages)
+    print(f"{mean_time=}")
+    print(f"{std_time=}")
+    print(f"{mean_memory=}")
+    print(f"{std_memory=}")
+    print(f"{max_memory=}")
+
+
+def profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True,
+                                              autocast_enabled=False):
+    model.to(device)
+    model.eval()
+    inputs = n_token_prompt(tokenizer, n=prompt_length, batch_size=batch_size, device=device)
+
+    # Not timed
+    with torch.no_grad():
+        output = model.generate(
+            inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            use_cache=use_cache,
+            min_new_tokens=10,
+            max_new_tokens=10,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+    inference_times = []
+    peak_memory_usages = []
+    for _ in range(3):
+        with torch.no_grad():
+            usage = resource.getrusage(resource.RUSAGE_SELF)
+            start = time.time()
+            with torch.autocast(device_type=device, enabled=autocast_enabled):
+                output = model.generate(
+                    inputs['input_ids'],
+                    use_cache=use_cache,
+                    attention_mask=inputs['attention_mask'],
+                    min_new_tokens=10,
+                    max_new_tokens=10,
+                    pad_token_id=tokenizer.pad_token_id,
+                    eos_token_id=tokenizer.eos_token_id,
+                )
+            end = time.time()
+            peak_memory_usages.append(usage.ru_maxrss / 1024)  # MB
+        inference_times.append(end - start)
+        mean_time = np.mean(inference_times)
+    std_time = np.std(inference_times)
+    mean_memory = np.mean(peak_memory_usages)
+    std_memory = np.std(peak_memory_usages)
+    max_memory = np.max(peak_memory_usages)
+    print(f"{mean_time=}")
+    print(f"{std_time=}")
+    print(f"{mean_memory=}")
+    print(f"{std_memory=}")
+    print(f"{max_memory=}")
+
+
 if __name__ == "__main__":
     model_path = "./TinyLlama/TinyLlama-1.1B-Chat-v1.0/"
     tokenizer = LlamaTokenizer.from_pretrained(model_path)
@@ -208,34 +320,62 @@ if __name__ == "__main__":
     ###
     # Lab2 - task0
     ###
-    print("----- Eager Mode Inference Profiling - CPU -----")
-    profile_execution_time(model, tokenizer, device="cpu", batch_size=1)
-    if torch.cuda.is_available():
-        print("----- Eager Mode Inference Profiling - CUDA -----")
-        profile_execution_time(model, tokenizer, device="cuda", batch_size=1)
+    # print("----- Eager Mode Inference Profiling - CPU -----")
+    # profile_execution_time(model, tokenizer, device="cpu", batch_size=1)
+    # if torch.cuda.is_available():
+    #     print("----- Eager Mode Inference Profiling - CUDA -----")
+    #     profile_execution_time(model, tokenizer, device="cuda", batch_size=1)
+
+    # ###
+    # # Lab2 - task1
+    # ###
+    # compiled_model = torch.compile(model)
+    # print("----- Compiled Mode Inference Profiling - CPU -----")
+    # profile_execution_time(compiled_model, tokenizer, device="cpu", batch_size=1)
+    # if torch.cuda.is_available():
+    #     print("----- Compiled Mode Inference Profiling - CUDA -----")
+    #     profile_execution_time(compiled_model, tokenizer, device="cuda", batch_size=1)
+
+    # ###
+    # # Lab2 - task2
+    # ###
+    # print("----- No KV Cache - Eager Mode Inference Profiling - CPU -----")
+    # profile_execution_time(model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
+    # if torch.cuda.is_available():
+    #     print("----- No KV Cache - Eager Mode Inference Profiling - CUDA -----")
+    #     profile_execution_time(model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False)
+
+    # print("----- No KV Cache - Compiled Mode Inference Profiling - CPU -----")
+    # profile_execution_time(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
+    # if torch.cuda.is_available():
+    #     print("----- No KV Cache - Compiled Mode Inference Profiling - CUDA -----")
+    #     profile_execution_time(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False)
 
     ###
-    # Lab2 - task1
+    ## Lab3 - task 0
     ###
     compiled_model = torch.compile(model)
-    print("----- Compiled Mode Inference Profiling - CPU -----")
-    profile_execution_time(compiled_model, tokenizer, device="cpu", batch_size=1)
-    if torch.cuda.is_available():
-        print("----- Compiled Mode Inference Profiling - CUDA -----")
-        profile_execution_time(compiled_model, tokenizer, device="cuda", batch_size=1)
 
-    ###
-    # Lab2 - task2
-    ###
-    print("----- No KV Cache - Eager Mode Inference Profiling - CPU -----")
-    profile_execution_time(model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
+    print("----- No KV Cache - Memory Profiling - CPU -----")
+    profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200,
+                                          use_cache=False)
     if torch.cuda.is_available():
-        print("----- No KV Cache - Eager Mode Inference Profiling - CUDA -----")
-        profile_execution_time(model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False)
+        print("----- No KV Cache - Memory Profiling - CUDA -----")
+        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200,
+                                              use_cache=False)
 
-    print("----- No KV Cache - Compiled Mode Inference Profiling - CPU -----")
-    profile_execution_time(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
+    print("----- autocast - No KV Cache - Memory Profiling - CPU -----")
+    profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200,
+                                          use_cache=False, autocast_enabled=True)
     if torch.cuda.is_available():
-        print("----- No KV Cache - Compiled Mode Inference Profiling - CUDA -----")
-        profile_execution_time(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200,
-                               use_cache=False)
+        print("----- autocast - No KV Cache - Memory Profiling - CUDA -----")
+        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200,
+                                              use_cache=False, autocast_enabled=True)
+
+    import intel_extension_for_pytorch as ipex
+
+    ipex_model = ipex.optimize(model, dtype=torch.float16)
+    print("----- IPEX - No KV Cache - Memory Profiling - CPU -----")
+    profile_execution_time_and_max_memory(ipex_model, tokenizer, device="cpu", batch_size=1, prompt_length=200,
+                                          use_cache=False, autocast_enabled=False)
+
