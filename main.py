@@ -2,6 +2,7 @@ import torch
 from transformers import LlamaForCausalLM, LlamaTokenizer
 from torch.profiler import profile, record_function, ProfilerActivity
 import time
+import numpy as np
 
 
 def n_token_prompt(tokenizer, n, batch_size, device):
@@ -22,11 +23,11 @@ def profile_inference(model, tokenizer, device, batch_size=1):
     print(f"\nRunning on {device}...")
 
     with profile(
-        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA] if device == "cuda" else [ProfilerActivity.CPU],
-        record_shapes=True,
-        with_stack=True,
-        with_flops=True,
-        profile_memory=True
+            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA] if device == "cuda" else [ProfilerActivity.CPU],
+            record_shapes=True,
+            with_stack=True,
+            with_flops=True,
+            profile_memory=True
     ) as prof:
         with torch.no_grad():
             with record_function("model_generate"):
@@ -48,7 +49,8 @@ def profile_inference(model, tokenizer, device, batch_size=1):
                 end = time.time()
 
     print(f"Inference time on {device}: {end - start:.4f} seconds")
-    print(prof.key_averages().table(sort_by="self_cuda_time_total" if device == "cuda" else "self_cpu_time_total", row_limit=20))
+    print(prof.key_averages().table(sort_by="self_cuda_time_total" if device == "cuda" else "self_cpu_time_total",
+                                    row_limit=20))
 
 
 def task_1(model):
@@ -58,10 +60,10 @@ def task_1(model):
 
     Per layer
     Num parameters in projection = 2*hidden*hidden_intermediate=23068672 (nie 4x,a ~2,5x)
-    
+
     K,V mają (256, 2048) a nie jak we wzorze założone 2048, 2048
     """
-    number_of_parameters_by_hand = 12 * 22 * 2048**2
+    number_of_parameters_by_hand = 12 * 22 * 2048 ** 2
     trainable_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"{number_of_parameters_by_hand=}")
     print(f"{trainable_parameters=}")
@@ -109,6 +111,47 @@ def throughput_inference(model, tokenizer, device, batch_size):
     print(f"Throughput: {throughput:.2f} tokens/second")
 
 
+def profile_execution_time(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True):
+    model.to(device)
+    model.eval()
+    inputs = n_token_prompt(tokenizer, n=prompt_length, batch_size=batch_size, device=device)
+
+    # Not timed
+    with torch.no_grad():
+        output = model.generate(
+            inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            use_cache=use_cache,
+            min_new_tokens=10,
+            max_new_tokens=10,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+        if device == "cuda":
+            torch.cuda.synchronize()
+    inference_times = []
+    for _ in range(3):
+        with torch.no_grad():
+            start = time.time()
+            output = model.generate(
+                inputs['input_ids'],
+                use_cache=use_cache,
+                attention_mask=inputs['attention_mask'],
+                min_new_tokens=10,
+                max_new_tokens=10,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+            if device == "cuda":
+                torch.cuda.synchronize()
+            end = time.time()
+        inference_times.append(end - start)
+    mean = np.mean(inference_times)
+    std = np.std(inference_times)
+    print(f"{mean=}")
+    print(f"{std=}")
+
+
 if __name__ == "__main__":
     model_path = "./TinyLlama/TinyLlama-1.1B-Chat-v1.0/"
     tokenizer = LlamaTokenizer.from_pretrained(model_path)
@@ -133,29 +176,66 @@ if __name__ == "__main__":
 
     # task_1(model=model)
 
-    print("-" * 10 + "WARMUP" + "-" * 10)
-    profile_inference(model, tokenizer, "cpu", batch_size=1)
-    # Profile on GPU (if available)
+    ###
+    # Lab1 - task2
+    ###
+
+    # print("-" * 10 + "WARMUP" + "-" * 10)
+    # profile_inference(model, tokenizer, "cpu", batch_size=1)
+    # # Profile on GPU (if available)
+    # if torch.cuda.is_available():
+    #     profile_inference(model, tokenizer, "cuda", batch_size=1)
+
+    # print("-" * 10 + "AFTER WARMUP" + "-" * 10)
+    # profile_inference(model, tokenizer, "cpu", batch_size=1)
+    # # Profile on GPU (if available)
+    # if torch.cuda.is_available():
+    #     profile_inference(model, tokenizer, "cuda", batch_size=1)
+
+    # """
+    # Większość czasu dla aten:mm
+    # """
+
+    # # Profile on CPU
+    # for batch_size in [1, 2, 4, 8]:
+    #     throughput_inference(model, tokenizer, device="cpu", batch_size=batch_size)
+
+    # # Profile on GPU (if available)
+    # if torch.cuda.is_available():
+    #     for batch_size in [1, 2, 4, 8]:
+    #         throughput_inference(model, tokenizer, device="cuda", batch_size=batch_size)
+
+    ###
+    # Lab2 - task0
+    ###
+    print("----- Eager Mode Inference Profiling - CPU -----")
+    profile_execution_time(model, tokenizer, device="cpu", batch_size=1)
     if torch.cuda.is_available():
-        profile_inference(model, tokenizer, "cuda", batch_size=1)
+        print("----- Eager Mode Inference Profiling - CUDA -----")
+        profile_execution_time(model, tokenizer, device="cuda", batch_size=1)
 
-    print("-" * 10 + "AFTER WARMUP" + "-" * 10)
-    profile_inference(model, tokenizer, "cpu", batch_size=1)
-    # Profile on GPU (if available)
+    ###
+    # Lab2 - task1
+    ###
+    compiled_model = torch.compile(model)
+    print("----- Compiled Mode Inference Profiling - CPU -----")
+    profile_execution_time(compiled_model, tokenizer, device="cpu", batch_size=1)
     if torch.cuda.is_available():
-        profile_inference(model, tokenizer, "cuda", batch_size=1)
+        print("----- Compiled Mode Inference Profiling - CUDA -----")
+        profile_execution_time(compiled_model, tokenizer, device="cuda", batch_size=1)
 
-    """
-    Większość czasu dla aten:mm
-    """
-        
-    # Profile on CPU
-    for batch_size in [1, 2, 4, 8]:
-        throughput_inference(model, tokenizer, device="cpu", batch_size=batch_size)
-
-    # Profile on GPU (if available)
+    ###
+    # Lab2 - task2
+    ###
+    print("----- No KV Cache - Eager Mode Inference Profiling - CPU -----")
+    profile_execution_time(model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
     if torch.cuda.is_available():
-        for batch_size in [1, 2, 4, 8]:
-            throughput_inference(model, tokenizer, device="cuda", batch_size=batch_size)
+        print("----- No KV Cache - Eager Mode Inference Profiling - CUDA -----")
+        profile_execution_time(model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False)
 
-    
+    print("----- No KV Cache - Compiled Mode Inference Profiling - CPU -----")
+    profile_execution_time(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
+    if torch.cuda.is_available():
+        print("----- No KV Cache - Compiled Mode Inference Profiling - CUDA -----")
+        profile_execution_time(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200,
+                               use_cache=False)
