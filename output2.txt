@@ -1,0 +1,24 @@
+----- Eager Mode Inference Profiling - CPU -----
+mean=np.float64(0.8030370076497396)
+std=np.float64(0.004910090114195952)
+----- Eager Mode Inference Profiling - CUDA -----
+mean=np.float64(0.11140878995259602)
+std=np.float64(0.0001961459409026703)
+----- Compiled Mode Inference Profiling - CPU -----
+mean=np.float64(0.7895086606343588)
+std=np.float64(0.002859808308557237)
+----- Compiled Mode Inference Profiling - CUDA -----
+mean=np.float64(0.11879173914591472)
+std=np.float64(0.0002073360246109746)
+----- No KV Cache - Eager Mode Inference Profiling - CPU -----
+mean=np.float64(5.993718306223552)
+std=np.float64(0.03657778603313307)
+----- No KV Cache - Eager Mode Inference Profiling - CUDA -----
+mean=np.float64(0.27378471692403156)
+std=np.float64(0.007347640257004093)
+----- No KV Cache - Compiled Mode Inference Profiling - CPU -----
+mean=np.float64(6.006986141204834)
+std=np.float64(0.01610975913577123)
+----- No KV Cache - Compiled Mode Inference Profiling - CUDA -----
+mean=np.float64(0.26769018173217773)
+std=np.float64(6.819466019750373e-05)

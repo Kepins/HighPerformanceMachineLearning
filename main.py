@@ -153,20 +153,16 @@ def profile_execution_time(model, tokenizer, device, batch_size, prompt_length=2
     print(f"{std=}")
 
 
-def profile_execution_time_and_max_memory(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True,
-                                          autocast_enabled=False):
+def profile_execution_time_and_max_memory(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True, autocast_enabled=False):
     if device == "cuda":
-        profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_size, prompt_length, use_cache,
-                                                   autocast_enabled)
+        profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_size, prompt_length, use_cache, autocast_enabled)
     elif device == "cpu":
-        profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_size, prompt_length, use_cache,
-                                                  autocast_enabled)
+        profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_size, prompt_length, use_cache, autocast_enabled)
     else:
         raise ValueError(f"Unsupported device: {device}")
 
 
-def profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True,
-                                               autocast_enabled=False):
+def profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True, autocast_enabled=False):
     torch.cuda.reset_peak_memory_stats()
     model.to(device)
     model.eval()
@@ -216,8 +212,7 @@ def profile_execution_time_and_max_memory_cuda(model, tokenizer, device, batch_s
     print(f"{max_memory=}")
 
 
-def profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True,
-                                              autocast_enabled=False):
+def profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_size, prompt_length=20, use_cache=True, autocast_enabled=False):
     model.to(device)
     model.eval()
     inputs = n_token_prompt(tokenizer, n=prompt_length, batch_size=batch_size, device=device)
@@ -252,8 +247,9 @@ def profile_execution_time_and_max_memory_cpu(model, tokenizer, device, batch_si
             end = time.time()
             peak_memory_usages.append(usage.ru_maxrss / 1024)  # MB
         inference_times.append(end - start)
-        mean_time = np.mean(inference_times)
+
     std_time = np.std(inference_times)
+    mean_time = np.mean(inference_times)
     mean_memory = np.mean(peak_memory_usages)
     std_memory = np.std(peak_memory_usages)
     max_memory = np.max(peak_memory_usages)
@@ -357,25 +353,28 @@ if __name__ == "__main__":
     compiled_model = torch.compile(model)
 
     print("----- No KV Cache - Memory Profiling - CPU -----")
-    profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200,
-                                          use_cache=False)
+    profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False)
     if torch.cuda.is_available():
         print("----- No KV Cache - Memory Profiling - CUDA -----")
-        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200,
-                                              use_cache=False)
+        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False)
 
     print("----- autocast - No KV Cache - Memory Profiling - CPU -----")
-    profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200,
-                                          use_cache=False, autocast_enabled=True)
+    profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False, autocast_enabled=True)
     if torch.cuda.is_available():
         print("----- autocast - No KV Cache - Memory Profiling - CUDA -----")
-        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200,
-                                              use_cache=False, autocast_enabled=True)
+        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False, autocast_enabled=True)
 
     import intel_extension_for_pytorch as ipex
 
-    ipex_model = ipex.optimize(model, dtype=torch.float16)
+    model.to("cpu")
+    ipex_model = ipex.optimize(model)
     print("----- IPEX - No KV Cache - Memory Profiling - CPU -----")
-    profile_execution_time_and_max_memory(ipex_model, tokenizer, device="cpu", batch_size=1, prompt_length=200,
-                                          use_cache=False, autocast_enabled=False)
+    profile_execution_time_and_max_memory(ipex_model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False, autocast_enabled=False)
+
+    model.half()
+    print("----- half - No KV Cache - Memory Profiling - CPU -----")
+    profile_execution_time_and_max_memory(model, tokenizer, device="cpu", batch_size=1, prompt_length=200, use_cache=False, autocast_enabled=False)
+    if torch.cuda.is_available():
+        print("----- half - No KV Cache - Memory Profiling - CUDA -----")
+        profile_execution_time_and_max_memory(compiled_model, tokenizer, device="cuda", batch_size=1, prompt_length=200, use_cache=False, autocast_enabled=True)
 

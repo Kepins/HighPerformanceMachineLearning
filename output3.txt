@@ -1,0 +1,42 @@
+----- No KV Cache - Memory Profiling - CPU -----
+mean_time=np.float64(6.774925311406453)
+std_time=np.float64(0.058731634250214056)
+mean_memory=np.float64(6857.9453125)
+std_memory=np.float64(0.0)
+max_memory=np.float64(6857.9453125)
+----- No KV Cache - Memory Profiling - CUDA -----
+mean_time=np.float64(0.26705177625020343)
+std_time=np.float64(0.00047067452099730793)
+mean_memory=np.float64(4224.84423828125)
+std_memory=np.float64(0.0)
+max_memory=np.float64(4224.84423828125)
+----- autocast - No KV Cache - Memory Profiling - CPU -----
+mean_time=np.float64(21.07112709681193)
+std_time=np.float64(0.009067037511851221)
+mean_memory=np.float64(7330.3046875)
+std_memory=np.float64(334.0085172195393)
+max_memory=np.float64(7566.484375)
+----- autocast - No KV Cache - Memory Profiling - CUDA -----
+mean_time=np.float64(0.1502805550893148)
+std_time=np.float64(0.018623337154022927)
+mean_memory=np.float64(6194.052897135417)
+std_memory=np.float64(0.4714045207910317)
+max_memory=np.float64(6194.38623046875)
+----- IPEX - No KV Cache - Memory Profiling - CPU -----
+mean_time=np.float64(7.168999354044597)
+std_time=np.float64(0.21891063574993042)
+mean_memory=np.float64(14024.03515625)
+std_memory=np.float64(1.8561553006146871)
+max_memory=np.float64(14025.34765625)
+----- half - No KV Cache - Memory Profiling - CPU -----
+mean_time=np.float64(25.668837865193684)
+std_time=np.float64(0.004877250536812371)
+mean_memory=np.float64(14151.16015625)
+std_memory=np.float64(0.0)
+max_memory=np.float64(14151.16015625)
+----- half - No KV Cache - Memory Profiling - CUDA -----
+mean_time=np.float64(0.11993114153544109)
+std_time=np.float64(0.0001141644710740947)
+mean_memory=np.float64(2118.68408203125)
+std_memory=np.float64(0.0)
+max_memory=np.float64(2118.68408203125)
